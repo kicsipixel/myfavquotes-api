@@ -45,7 +45,7 @@ to our manifest file. This will allow the server to communicate to the database.
 
 The updated `Package.swift` file will look like this:
 
-```json
+```swift
 import PackageDescription
 
 let package = Package(
