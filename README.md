@@ -141,10 +141,12 @@ struct CreateQuoteTableMigration: AsyncMigration {
 
 ## Add migration to `Application+build.swift`
 
-In our `Application+build.swift` file import the following libraries:
+In our `Application+build.swift` file import the following additional libraries:
 
-- FluentPostgresDriver
-- HummingbirdFluent
+```swift
+import FluentPostgresDriver
+import HummingbirdFluent
+```
 
 For security reason we don’t want to include the database credentials into our source code and replicate to a public repository.
 
