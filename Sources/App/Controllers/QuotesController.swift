@@ -9,9 +9,10 @@
 import FluentKit
 import Foundation
 import Hummingbird
+import HummingbirdAuth
 import HummingbirdFluent
 
-struct QuotesController<Context: RequestContext> {
+struct QuotesController<Context: AuthRequestContext & RequestContext> {
     
     let fluent: Fluent
     
@@ -19,6 +20,7 @@ struct QuotesController<Context: RequestContext> {
         group
             .get(use: self.index)
             .get(":id", use: self.show)
+            .add(middleware: IsAuthenticatedMiddleware(User.self))
             .post(use: self.create)
             .put(":id", use: self.update)
             .delete(":id", use: self.delete)
@@ -27,7 +29,8 @@ struct QuotesController<Context: RequestContext> {
     // MARK: - index
     /// Returns with all the quotes in the database
     @Sendable func index(_ request: Request, context: Context) async throws -> [Quote] {
-        try await Quote.query(on: self.fluent.db()).all()
+        //let user = try context.auth.require(User.self)
+        return try await Quote.query(on: self.fluent.db()).all()
     }
     
     // MARK: - show
@@ -44,7 +47,9 @@ struct QuotesController<Context: RequestContext> {
     // MARK: - create
     /// Create new quote
     @Sendable func create(_ request: Request, context: Context) async throws -> Quote {
-        let quote = try await request.decode(as: Quote.self, context: context)
+        let user = try context.auth.require(User.self)
+        let userInput = try await request.decode(as: NewQuote.self, context: context)
+        let quote = try Quote(quoteText: userInput.quoteText, author: userInput.author, ownerID: user.requireID())
         try await quote.save(on: fluent.db())
         return quote
     }
@@ -57,10 +62,15 @@ struct QuotesController<Context: RequestContext> {
             throw HTTPError(.notFound, message: "This quote is not in the database. Try different one.")
         }
         
-        let updatedQuote = try await request.decode(as: Quote.self, context: context)
+        let updatedQuote = try await request.decode(as: UpdatedQuote.self, context: context)
         
-        quote.quoteText = updatedQuote.quoteText
-        quote.author = updatedQuote.author
+        if let quoteText = updatedQuote.quoteText {
+            quote.quoteText = quoteText
+        }
+        
+        if let author = updatedQuote.author {
+            quote.author = author
+        }
         
         try await quote.save(on: fluent.db())
         
@@ -79,5 +89,3 @@ struct QuotesController<Context: RequestContext> {
         return .ok
     }
 }
-
-
