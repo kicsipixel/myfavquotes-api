@@ -20,7 +20,7 @@ struct QuotesController<Context: AuthRequestContext & RequestContext> {
         group
             .get(use: self.index)
             .get(":id", use: self.show)
-            .add(middleware: IsAuthenticatedMiddleware(User.self))
+            .add(middleware: BearerAuthenticator(fluent: fluent))
             .post(use: self.create)
             .put(":id", use: self.update)
             .delete(":id", use: self.delete)
@@ -29,7 +29,6 @@ struct QuotesController<Context: AuthRequestContext & RequestContext> {
     // MARK: - index
     /// Returns with all the quotes in the database
     @Sendable func index(_ request: Request, context: Context) async throws -> [Quote] {
-        //let user = try context.auth.require(User.self)
         return try await Quote.query(on: self.fluent.db()).all()
     }
     
@@ -57,20 +56,24 @@ struct QuotesController<Context: AuthRequestContext & RequestContext> {
     // MARK: - edit
     /// Edit the quote with {id}
     @Sendable func update(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
+        let user = try context.auth.require(User.self)
         let id = try context.parameters.require("id", as: UUID.self)
-        guard let quote = try await Quote.find(id, on: fluent.db()) else {
+        guard let originalQuote = try await Quote.find(id, on: fluent.db()) else {
             throw HTTPError(.notFound, message: "This quote is not in the database. Try different one.")
         }
         
-        let updatedQuote = try await request.decode(as: UpdatedQuote.self, context: context)
+        let userInput = try await request.decode(as: UpdatedQuote.self, context: context)
         
-        if let quoteText = updatedQuote.quoteText {
-            quote.quoteText = quoteText
+        // Check if the user submitted any changes, ignore if it is nil
+        if let quoteText = userInput.quoteText {
+            originalQuote.quoteText = quoteText
         }
         
-        if let author = updatedQuote.author {
-            quote.author = author
+        if let author = userInput.author {
+            originalQuote.author = author
         }
+        
+        let quote = try Quote(quoteText: originalQuote.quoteText, author: originalQuote.author, ownerID: user.requireID())
         
         try await quote.save(on: fluent.db())
         
@@ -80,9 +83,14 @@ struct QuotesController<Context: AuthRequestContext & RequestContext> {
     // MARK: - delete
     /// Delete the quote with {id}
     @Sendable func delete(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
+        let user = try context.auth.require(User.self)
         let id = try context.parameters.require("id", as: UUID.self)
         guard let quote = try await Quote.find(id, on: fluent.db()) else {
             throw HTTPError(.notFound, message: "This quote is not in the database. Try different one.")
+        }
+        
+        guard user.id == quote.$owner.id else {
+            throw HTTPError(.unauthorized, message: "You cannot delete someone else's quote.")
         }
         
         try await quote.delete(on: fluent.db())

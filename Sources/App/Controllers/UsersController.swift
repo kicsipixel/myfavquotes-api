@@ -10,14 +10,15 @@ import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
 
-struct UsersController<Context: RequestContext> {
+struct UsersController<Context: AuthRequestContext & RequestContext> {
     
     let fluent: Fluent
     
     func addRoutes(to group:RouterGroup<Context>) {
         group
-            .get(use: self.index)
             .post(use: self.create)
+            .add(middleware: IsAuthenticatedMiddleware(User.self))
+            .post("login", use: self.login)
     }
     
     // MARK: - Create
@@ -30,8 +31,12 @@ struct UsersController<Context: RequestContext> {
         return .init(status: .created, response: User.Public(from: user))
     }
     
-    // MARK: - List
-    @Sendable func index(_ request: Request, context: Context) async throws -> [User] {
-        return try await User.query(on: self.fluent.db()).all()
+    // MARK: - Login
+    @Sendable func login(_ req: Request, context: Context) async throws -> Token {
+        let user = try context.auth.require(User.self)
+        let token = try Token.generate(for: user)
+        try await token.save(on: self.fluent.db())
+        
+        return token
     }
 }
