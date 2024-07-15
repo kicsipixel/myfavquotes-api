@@ -15,13 +15,14 @@ import HummingbirdFluent
 struct QuotesController<Context: AuthRequestContext & RequestContext> {
     
     let fluent: Fluent
+    let persist: FluentPersistDriver
     
     func addRoutes(to group:RouterGroup<Context>) {
         group
             .get(use: self.index)
             .get(":id", use: self.show)
         group
-            .add(middleware: BearerAuthenticator(fluent: fluent))
+            .add(middleware: BearerAuthenticator(fluent: fluent, persist: persist))
             .post(use: self.create)
             .put(":id", use: self.update)
             .delete(":id", use: self.delete)

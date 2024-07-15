@@ -11,7 +11,7 @@ import Foundation
 import Hummingbird
 import HummingbirdAuth
 
-final class Token: Authenticatable, Model, @unchecked Sendable, ResponseCodable {
+final class Token: Model, @unchecked Sendable, ResponseCodable {
     static let schema = "tokens"
     
     @ID(key: .id)
@@ -25,7 +25,7 @@ final class Token: Authenticatable, Model, @unchecked Sendable, ResponseCodable 
     
     init() { }
     
-    init(id: UUID? = nil, tokenValue: String, userID: User.IDValue) {
+    init(id: UUID = UUID(), tokenValue: String, userID: User.IDValue) {
         self.id = id
         self.tokenValue = tokenValue
         self.$user.id = userID

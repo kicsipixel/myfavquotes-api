@@ -13,6 +13,7 @@ import HummingbirdFluent
 struct UsersController<Context: AuthRequestContext & RequestContext> {
     
     let fluent: Fluent
+    let persist: FluentPersistDriver
     
     func addRoutes(to group:RouterGroup<Context>) {
         group
@@ -35,7 +36,8 @@ struct UsersController<Context: AuthRequestContext & RequestContext> {
     @Sendable func login(_ req: Request, context: Context) async throws -> Token {
         let user = try context.auth.require(User.self)
         let token = try Token.generate(for: user)
-        try await token.save(on: self.fluent.db())
+        
+        try await persist.create(key: "\(token.tokenValue)", value: token, expires: .seconds(3600))
         
         return token
     }
