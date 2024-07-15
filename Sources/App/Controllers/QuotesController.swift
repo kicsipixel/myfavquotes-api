@@ -20,6 +20,7 @@ struct QuotesController<Context: AuthRequestContext & RequestContext> {
         group
             .get(use: self.index)
             .get(":id", use: self.show)
+        group
             .add(middleware: BearerAuthenticator(fluent: fluent))
             .post(use: self.create)
             .put(":id", use: self.update)
