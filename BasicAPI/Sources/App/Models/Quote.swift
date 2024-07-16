@@ -21,17 +21,13 @@ final class Quote: Model, @unchecked Sendable {
     
     @Field(key: "author")
     var author: String
-    
-    @Parent(key: "owner_id")
-    var owner: User
-    
+        
     init() {}
     
-    init(id: UUID? = nil, quoteText: String, author: String, ownerID: User.IDValue) {
+    init(id: UUID? = nil, quoteText: String, author: String) {
         self.id = id
         self.quoteText = quoteText
         self.author = author
-        self.$owner.id = ownerID
     }
 }
 

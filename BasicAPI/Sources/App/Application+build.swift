@@ -1,6 +1,5 @@
 import FluentPostgresDriver
 import Hummingbird
-import HummingbirdAuth
 import HummingbirdFluent
 import Logging
 
@@ -25,7 +24,7 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
         return logger
     }()
     
-    let router = Router(context: QuotesAuthRequestContext.self)
+    let router = Router()
     // Add logging
     router.add(middleware: LogRequestsMiddleware(.info))
     
@@ -39,7 +38,7 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
     // Database configuration
     let env = try await Environment.dotEnv()
     
-    let postgreSQLConfig = SQLPostgresConfiguration(hostname: "localhost",
+    let postgreSQLConfig = SQLPostgresConfiguration(hostname: env.get("DATABASE_HOST") ?? "localhost",
                                                         port: env.get("DATABASE_PORT").flatMap(Int.init(_:)) ?? SQLPostgresConfiguration.ianaPortNumber,
                                                         username: env.get("DATABASE_USERNAME") ?? "username",
                                                         password: env.get("DATABASE_PASSWORD") ?? "password",
@@ -47,22 +46,13 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
                                                         tls: .prefer(try .init(configuration: .clientDefault)))
     
     fluent.databases.use(.postgres(configuration: postgreSQLConfig, sqlLogLevel: .warning), as: .psql)
-    
-    // Persist
-    let persist = await FluentPersistDriver(fluent: fluent)
-    
+        
     // Database migration
-    await fluent.migrations.add(CreateUserTableMigration())
     await fluent.migrations.add(CreateQuoteTableMigration())
     try await fluent.migrate()
-    
-    // Middlewares
-    router.middlewares.add(BasicAuthenticator(fluent: fluent))
-    router.middlewares.add(BearerAuthenticator(fluent: fluent, persist: persist))
-    
+        
     // Controllers
-    QuotesController(fluent: fluent, persist: persist).addRoutes(to: router.group("api/v1/quotes"))
-    UsersController(fluent: fluent, persist: persist).addRoutes(to: router.group("api/v1/users"))
+    QuotesController(fluent: fluent).addRoutes(to: router.group("api/v1/quotes"))
     
     var app = Application(
         router: router,
@@ -74,7 +64,6 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
     )
     
     app.addServices(fluent)
-    app.addServices(persist)
     
     return app
 }

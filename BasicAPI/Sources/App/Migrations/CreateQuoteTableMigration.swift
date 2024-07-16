@@ -14,7 +14,6 @@ struct CreateQuoteTableMigration: AsyncMigration {
             .id()
             .field("quote_text", .string, .required)
             .field("author", .string, .required)
-            .field("owner_id", .uuid, .required, .references("users", "id"))
             .unique(on: "quote_text")
             .create()
     }
