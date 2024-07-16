@@ -2,6 +2,6 @@
 
 Source code for the [tutorial]().
 
-- Basic API [code]()
+- Basic API [code](https://github.com/kicsipixel/myfavquotes-api/tree/main/BasicAPI)
 - Basic Auth [code]()
 - Bearer Authentication [code]()
