@@ -27,7 +27,7 @@ $ docker compose build
 ### Run the server
 
 ```
-$ docker compose up db -d
+$ docker compose up app -d
 ```
 
 ### Run pgAdmin
