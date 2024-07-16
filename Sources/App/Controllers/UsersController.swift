@@ -18,6 +18,7 @@ struct UsersController<Context: AuthRequestContext & RequestContext> {
     func addRoutes(to group:RouterGroup<Context>) {
         group
             .post(use: self.create)
+        group
             .add(middleware: IsAuthenticatedMiddleware(User.self))
             .post("login", use: self.login)
     }
