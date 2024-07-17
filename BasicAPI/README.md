@@ -38,7 +38,7 @@ $ docker compose up pgadmin -d
 Check [the tutorial](https://medium.com/@kicsipixel/install-pgadmin-with-postgresql-database-using-docker-ded3e2dfbe3b) how to set it up.
 
 ### Test
-Use the attached [RapidAPI](https://paw.cloud)  `.paw` file.
+Use the attached [RapidAPI](https://paw.cloud) [`My_Fav_Quotes_Basic.paw`](My_Fav_Quotes_Basic.paw) file.
 
 ### Endpoints
 
