@@ -13,14 +13,10 @@ import HummingbirdFluent
 struct UsersController<Context: AuthRequestContext & RequestContext> {
     
     let fluent: Fluent
-    let persist: FluentPersistDriver
     
     func addRoutes(to group:RouterGroup<Context>) {
         group
             .post(use: self.create)
-        group
-            .add(middleware: IsAuthenticatedMiddleware(User.self))
-            .post("login", use: self.login)
     }
     
     // MARK: - Create
@@ -31,15 +27,5 @@ struct UsersController<Context: AuthRequestContext & RequestContext> {
         try await user.save(on: self.fluent.db())
         
         return .init(status: .created, response: User.Public(from: user))
-    }
-    
-    // MARK: - Login
-    @Sendable func login(_ req: Request, context: Context) async throws -> Token {
-        let user = try context.auth.require(User.self)
-        let token = try Token.generate(for: user)
-        
-        try await persist.create(key: "\(token.tokenValue)", value: token, expires: .seconds(3600))
-        
-        return token
     }
 }
