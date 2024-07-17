@@ -23,12 +23,6 @@ struct BearerAuthenticator<Context: AuthRequestContext>: AuthenticatorMiddleware
         guard let token = token else {
             throw HTTPError(.unauthorized, message: "The token was expired, please login again.")
         }
-        
-//        let token = try await Token.query(on: self.fluent.db())
-//            .filter(\.$tokenValue == bearer.token)
-//            .first()
-
-       // guard let token = token else { return nil }
                 
         let user = try await User.query(on: self.fluent.db())
             .filter(\.$id == token.$user.id)

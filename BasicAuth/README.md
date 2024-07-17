@@ -39,7 +39,7 @@ Check [the tutorial](https://medium.com/@kicsipixel/install-pgadmin-with-postgre
 
 ### Test
 Use the attached [RapidAPI](https://paw.cloud)  [`My_Fav_Quotes_BasicAuth.paw`](My_Fav_Quotes_BasicAuth.paw) file.
-cdls
+
 ### Endpoints
 
  HTTP Method | Endpoint                                 | Description                             |

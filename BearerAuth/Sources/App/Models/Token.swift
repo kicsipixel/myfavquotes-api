@@ -34,9 +34,9 @@ final class Token: Model, @unchecked Sendable, ResponseCodable {
 
 extension Token {
     static func generate(for user: User) throws -> Token {
-        // Keeping it simple for testing...
-        let random = (1...2).map( {_ in Int.random(in: 0...9)} )
+        let random = (1...8).map( {_ in Int.random(in: 0...999)} )
         let tokenString = String(describing: random).toBase64()
+        
         return try Token(tokenValue: tokenString, userID: user.requireID())
     }
 }
