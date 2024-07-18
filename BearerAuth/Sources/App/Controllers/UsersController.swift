@@ -21,6 +21,7 @@ struct UsersController<Context: AuthRequestContext & RequestContext> {
         group
             .add(middleware: IsAuthenticatedMiddleware(User.self))
             .post("login", use: self.login)
+            .get("quotes", use: self.usersQuotes)
     }
     
     // MARK: - Create
@@ -41,5 +42,17 @@ struct UsersController<Context: AuthRequestContext & RequestContext> {
         try await persist.create(key: "\(token.tokenValue)", value: token, expires: .seconds(3600))
         
         return token
+    }
+    
+    // MARK: - Show quotes created by user
+    /// Returns with the an array of quotes
+    @Sendable func usersQuotes(_ request: Request, context: Context) async throws -> [Quote]? {
+        let user = try context.auth.require(User.self)
+        
+        let quotes = try await Quote.query(on: self.fluent.db())
+            .filter(\.$owner.$id == user.requireID())
+            .all()
+        
+        return quotes
     }
 }
