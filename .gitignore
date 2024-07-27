@@ -8,7 +8,4 @@ xcuserdata/
 **/.vscode/*
 !/.vscode/hummingbird.code-snippets
 **/.env
-/Likes/
-Likes/
-/Likes/**
-Likes/**
+/Likes
