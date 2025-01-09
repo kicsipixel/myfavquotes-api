@@ -51,4 +51,3 @@ Use the attached [RapidAPI](https://paw.cloud)  [`My_Fav_Quotes_BasicAuth.paw`](
 |__PUT__     |http://127.0.0.1:8080/api/v1/quotes/{:id} | Updates the quote with the given id     |
 |__DELETE__  |http://127.0.0.1:8080/api/v1/quotes/{:id} | Removes the quote with id from database |
 |__POST__ | http://127.0.0.1:8080/api/v1/users | Create new user |
-

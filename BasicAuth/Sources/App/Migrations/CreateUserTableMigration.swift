@@ -1,10 +1,3 @@
-//
-//  CreateUserTableMigration.swift
-//
-//
-//  Created by Szabolcs Toth on 12.07.2024.
-//
-
 import FluentKit
 
 struct CreateUserTableMigration: AsyncMigration {

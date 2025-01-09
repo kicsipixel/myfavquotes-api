@@ -1,16 +1,10 @@
-//
-//  UsersController.swift
-//
-//
-//  Created by Szabolcs Toth on 12.07.2024.
-//
-
 import FluentKit
 import Hummingbird
 import HummingbirdAuth
+import HummingbirdBcrypt
 import HummingbirdFluent
 
-struct UsersController<Context: AuthRequestContext & RequestContext> {
+struct UsersController<Context: RequestContext> {
     
     let fluent: Fluent
     
@@ -19,7 +13,7 @@ struct UsersController<Context: AuthRequestContext & RequestContext> {
             .post(use: self.create)
     }
     
-    // MARK: - Create
+    // MARK: - Creates new user
     @Sendable func create(_ req: Request, context: Context) async throws -> EditedResponse<User.Public> {
         let user = try await req.decode(as: User.self, context: context)
         user.password = Bcrypt.hash(user.password)
