@@ -38,8 +38,8 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
         
     // Database configuration
     let env = try await Environment.dotEnv()
-    
-    let postgreSQLConfig = SQLPostgresConfiguration(hostname: env.get("DATABASE_HOST") ?? "localhost",
+    //env.get("DATABASE_HOST") ?? 
+    let postgreSQLConfig = SQLPostgresConfiguration(hostname: "localhost",
                                                         port: env.get("DATABASE_PORT").flatMap(Int.init(_:)) ?? SQLPostgresConfiguration.ianaPortNumber,
                                                         username: env.get("DATABASE_USERNAME") ?? "username",
                                                         password: env.get("DATABASE_PASSWORD") ?? "password",

@@ -3,67 +3,77 @@ import Hummingbird
 import HummingbirdFluent
 import Logging
 
-/// Application arguments protocol. We use a protocol so we can call
-/// `buildApplication` inside Tests as well as in the App executable. 
-/// Any variables added here also have to be added to `App` in App.swift and 
-/// `TestArguments` in AppTest.swift
+  /// Application arguments protocol. We use a protocol so we can call
+  /// `buildApplication` inside Tests as well as in the App executable.
+  /// Any variables added here also have to be added to `App` in App.swift and
+  /// `TestArguments` in AppTest.swift
 public protocol AppArguments {
-    var hostname: String { get }
-    var port: Int { get }
-    var logLevel: Logger.Level? { get }
+  var hostname: String { get }
+  var port: Int { get }
+  var logLevel: Logger.Level? { get }
 }
 
+  // Request context used by application
+typealias AppRequestContext = BasicRequestContext
+
+  ///  Build application
+  /// - Parameter arguments: application arguments
 public func buildApplication(_ arguments: some AppArguments) async throws -> some ApplicationProtocol {
-    let environment = Environment()
-    let logger = {
-        var logger = Logger(label: "template")
-        logger.logLevel = 
-            arguments.logLevel ??
-            environment.get("LOG_LEVEL").map { Logger.Level(rawValue: $0) ?? .info } ??
-            .info
-        return logger
-    }()
-    
-    let router = Router()
-    // Add logging
-    router.add(middleware: LogRequestsMiddleware(.info))
-    
-    // Add health endpoint
-    router.get("/health") { _,_ -> HTTPResponse.Status in
-        return .ok
-    }
-    
-    let fluent = Fluent(logger: logger)
-        
+  let environment = Environment()
+  let logger = {
+    var logger = Logger(label: "BasicAPI")
+    logger.logLevel =
+    arguments.logLevel ??
+    environment.get("LOG_LEVEL").flatMap { Logger.Level(rawValue: $0) } ??
+      .info
+    return logger
+  }()
+  let router = buildRouter()
+  let fluent = Fluent(logger: logger)
+  
+  let env = try await Environment.dotEnv()
+  
     // Database configuration
-    let env = try await Environment.dotEnv()
-    
-    let postgreSQLConfig = SQLPostgresConfiguration(hostname: env.get("DATABASE_HOST") ?? "localhost",
-                                                        port: env.get("DATABASE_PORT").flatMap(Int.init(_:)) ?? SQLPostgresConfiguration.ianaPortNumber,
-                                                        username: env.get("DATABASE_USERNAME") ?? "username",
-                                                        password: env.get("DATABASE_PASSWORD") ?? "password",
-                                                        database: env.get("DATABASE_NAME") ?? "hb-db",
-                                                        tls: .prefer(try .init(configuration: .clientDefault)))
-    
-    fluent.databases.use(.postgres(configuration: postgreSQLConfig, sqlLogLevel: .warning), as: .psql)
-        
+  let postgreSQLConfig = SQLPostgresConfiguration(hostname: env.get("DATABASE_HOST") ?? "localhost",
+                                                  port: env.get("DATABASE_PORT").flatMap(Int.init(_:)) ?? SQLPostgresConfiguration.ianaPortNumber,
+                                                  username: env.get("DATABASE_USERNAME") ?? "username",
+                                                  password: env.get("DATABASE_PASSWORD") ?? "password",
+                                                  database: env.get("DATABASE_NAME") ?? "hb-db",
+                                                  tls: .prefer(try .init(configuration: .clientDefault)))
+  fluent.databases.use(.postgres(configuration: postgreSQLConfig, sqlLogLevel: .warning), as: .psql)
+  
     // Database migration
-    await fluent.migrations.add(CreateQuoteTableMigration())
-    try await fluent.migrate()
-        
+  await fluent.migrations.add(CreateQuoteTableMigration())
+  try await fluent.migrate()
+  
     // Controllers
-    QuotesController(fluent: fluent).addRoutes(to: router.group("api/v1/quotes"))
-    
-    var app = Application(
-        router: router,
-        configuration: .init(
-            address: .hostname(arguments.hostname, port: arguments.port),
-            serverName: "template"
-        ),
-        logger: logger
-    )
-    
-    app.addServices(fluent)
-    
-    return app
+  QuotesController(fluent: fluent).addRoutes(to: router.group("api/v1/quotes"))
+  
+  var app = Application(
+    router: router,
+    configuration: .init(
+      address: .hostname(arguments.hostname, port: arguments.port),
+      serverName: "BasicAPI"
+    ),
+    logger: logger
+  )
+  
+  app.addServices(fluent)
+  
+  return app
+}
+
+  /// Build router
+func buildRouter() -> Router<AppRequestContext> {
+  let router = Router(context: AppRequestContext.self)
+    // Add middleware
+  router.addMiddleware {
+      // logging middleware
+    LogRequestsMiddleware(.info)
+  }
+    // Add default endpoint
+  router.get("/health") { _, _ -> HTTPResponse.Status in
+      .ok
+  }
+  return router
 }

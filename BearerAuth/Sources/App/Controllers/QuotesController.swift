@@ -36,13 +36,25 @@ struct QuotesController<Context: AuthRequestContext & RequestContext> {
     
     // MARK: - show
     /// Returns with the quote with {id}
-    @Sendable func show(_ request: Request, context: Context) async throws -> Quote? {
+    @Sendable func show(_ request: Request, context: Context) async throws -> Szabolcs? {
         let id = try context.parameters.require("id", as: UUID.self)
         guard let quote = try await Quote.find(id, on: fluent.db()) else {
             throw HTTPError(.notFound, message: "This quote is not in the database. Try different one.")
         }
         
-        return quote
+        let user = try await User.query(on: self.fluent.db())
+            .filter(\.$id == quote.$owner.id)
+            .first()
+        
+        guard let user = user else { return nil }
+          
+        
+        return Szabolcs(quote: quote, owner: user.nickname)
+    }
+    
+    struct Szabolcs: ResponseCodable {
+        let quote: Quote
+        let owner: String
     }
     
     // MARK: - create
