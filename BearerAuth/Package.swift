@@ -11,7 +11,7 @@ let package = Package(
     ],
     dependencies: [
         // Hummingbird base
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0-rc.2"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0-rc.3"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0"),
         // Authentication
         .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "2.0.0-beta.4"),
