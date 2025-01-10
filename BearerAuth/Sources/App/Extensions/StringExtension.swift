@@ -1,11 +1,3 @@
-//
-//  StringExtension.swift
-//  
-//
-//  Created by Szabolcs Tóth on 14.07.2024.
-//  Copyright © 2024 Szabolcs Tóth. All rights reserved.
-//
-
 import Foundation
 
 extension String {
@@ -13,7 +5,7 @@ extension String {
     func toBase64() -> String {
         return Data(self.utf8).base64EncodedString()
     }
-    
+
     /// Decode a String from Base64. Returns nil if unsuccessful.
     func fromBase64() -> String? {
         guard let data = Data(base64Encoded: self) else { return nil }

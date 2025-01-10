@@ -1,28 +1,29 @@
-//
-//  QuotesController.swift
-//
-//
-//  Created by Szabolcs Tóth on 11.07.2024.
-//  Copyright © 2024 Szabolcs Tóth. All rights reserved.
-//
-
 import FluentKit
 import Foundation
 import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
 
-struct QuotesController<Context: AuthRequestContext & RequestContext> {
+struct QuotesController {
+    
+    struct QuoteContext: ChildRequestContext {
+        var coreContext: CoreRequestContextStorage
+        var user: User
+        
+        init(context: QuotesAuthRequestContext) throws {
+            self.coreContext = context.coreContext
+            self.user = try context.requireIdentity()
+        }
+    }
     
     let fluent: Fluent
-    let persist: FluentPersistDriver
     
-    func addRoutes(to group:RouterGroup<Context>) {
+    func addRoutes(to group:RouterGroup<QuotesAuthRequestContext>) {
         group
             .get(use: self.index)
             .get(":id", use: self.show)
-        group
-            .add(middleware: BearerAuthenticator(fluent: fluent, persist: persist))
+            .add(middleware: BearerAuthenticator(fluent: fluent))
+            .group(context: QuoteContext.self)
             .post(use: self.create)
             .put(":id", use: self.update)
             .delete(":id", use: self.delete)
@@ -30,54 +31,40 @@ struct QuotesController<Context: AuthRequestContext & RequestContext> {
     
     // MARK: - index
     /// Returns with all the quotes in the database
-    @Sendable func index(_ request: Request, context: Context) async throws -> [Quote] {
-        return try await Quote.query(on: self.fluent.db()).all()
+    @Sendable func index(_ request: Request, context: QuotesAuthRequestContext) async throws -> [Quote] {
+        try await Quote.query(on: self.fluent.db()).all()
     }
     
     // MARK: - show
     /// Returns with the quote with {id}
-    @Sendable func show(_ request: Request, context: Context) async throws -> Szabolcs? {
+    @Sendable func show(_ request: Request, context: QuotesAuthRequestContext) async throws -> Quote? {
         let id = try context.parameters.require("id", as: UUID.self)
         guard let quote = try await Quote.find(id, on: fluent.db()) else {
             throw HTTPError(.notFound, message: "This quote is not in the database. Try different one.")
         }
         
-        let user = try await User.query(on: self.fluent.db())
-            .filter(\.$id == quote.$owner.id)
-            .first()
-        
-        guard let user = user else { return nil }
-          
-        
-        return Szabolcs(quote: quote, owner: user.nickname)
-    }
-    
-    struct Szabolcs: ResponseCodable {
-        let quote: Quote
-        let owner: String
+        return quote
     }
     
     // MARK: - create
     /// Create new quote
-    @Sendable func create(_ request: Request, context: Context) async throws -> Quote {
-        let user = try context.auth.require(User.self)
+    @Sendable func create(_ request: Request, context: QuoteContext) async throws -> Quote {
         let userInput = try await request.decode(as: NewQuote.self, context: context)
-        let quote = try Quote(quoteText: userInput.quoteText, author: userInput.author, ownerID: user.requireID())
-       
+        let quote = try Quote(quoteText: userInput.quoteText, author: userInput.author, ownerID: context.user.requireID())
+        
         try await quote.save(on: fluent.db())
         return quote
     }
     
     // MARK: - edit
-    /// Edit the quote with {id}
-    @Sendable func update(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
-        let user = try context.auth.require(User.self)
+    /// Edits the quote with {id}
+    @Sendable func update(_ request: Request, context: QuoteContext) async throws -> HTTPResponse.Status {
         let id = try context.parameters.require("id", as: UUID.self)
         guard let quote = try await Quote.find(id, on: fluent.db()) else {
             throw HTTPError(.notFound, message: "This quote is not in the database. Try different one.")
         }
         
-        guard user.id == quote.$owner.id else {
+        guard context.user.id == quote.$owner.id else {
             throw HTTPError(.unauthorized, message: "You cannot edit someone else's quote.")
         }
         
@@ -93,20 +80,18 @@ struct QuotesController<Context: AuthRequestContext & RequestContext> {
         }
         
         try await quote.save(on: fluent.db())
-        
         return .ok
     }
     
     // MARK: - delete
-    /// Delete the quote with {id}
-    @Sendable func delete(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
-        let user = try context.auth.require(User.self)
+    /// Deletes the quote with {id}
+    @Sendable func delete(_ request: Request, context: QuoteContext) async throws -> HTTPResponse.Status {
         let id = try context.parameters.require("id", as: UUID.self)
         guard let quote = try await Quote.find(id, on: fluent.db()) else {
             throw HTTPError(.notFound, message: "This quote is not in the database. Try different one.")
         }
         
-        guard user.id == quote.$owner.id else {
+        guard context.user.id == quote.$owner.id else {
             throw HTTPError(.unauthorized, message: "You cannot delete someone else's quote.")
         }
         
