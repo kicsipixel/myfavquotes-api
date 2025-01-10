@@ -71,9 +71,8 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
 func buildRouter(fluent: Fluent) -> Router<QuotesAuthRequestContext> {
   let router = Router(context: QuotesAuthRequestContext.self)
   
-    // Add middleware
+    // Add middlewares
   router.addMiddleware {
-      // logging middleware
     LogRequestsMiddleware(.debug)
     BasicAuthenticator(fluent: fluent)
   }
