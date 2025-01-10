@@ -1,6 +1,7 @@
-# Swift Server-Side Authentication: Bearer Authentication and Hummingbird 2
+# Swift on Server Authentication
+### Bearer Authentication and Hummingbird 2
 
-Source code for the tutorial, which is in draft (waiting for proof reading). In case you want to read it, you can request the link.
+Source code for the [tutorial](https://medium.com/@kicsipixel/swift-on-server-authentication-d35884a1e052)
 
 - Basic API [code](https://github.com/kicsipixel/myfavquotes-api/tree/main/BasicAPI)
 - Basic Auth [code](https://github.com/kicsipixel/myfavquotes-api/tree/main/BasicAuth)
