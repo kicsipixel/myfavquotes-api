@@ -4,4 +4,4 @@ Source code for the tutorial, which is in draft (waiting for proof reading). In 
 
 - Basic API [code](https://github.com/kicsipixel/myfavquotes-api/tree/main/BasicAPI)
 - Basic Auth [code](https://github.com/kicsipixel/myfavquotes-api/tree/main/BasicAuth)
-- Bearer Authentication [code]()
+- Bearer Authentication [code](https://github.com/kicsipixel/myfavquotes-api/tree/main/BearerAuth)
