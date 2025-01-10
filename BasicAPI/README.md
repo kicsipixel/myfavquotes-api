@@ -1,4 +1,5 @@
-# Swift Server-Side Authentication: Bearer Authentication and Hummingbird 2
+# Swift on Server Authentication
+## Bearer Authentication and Hummingbird 2
 
 
 ### Create an `.env` file with the following:
