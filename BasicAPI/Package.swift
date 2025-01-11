@@ -7,32 +7,35 @@ let package = Package(
     name: "BasicAPI",
     platforms: [.macOS(.v14), .iOS(.v17), .tvOS(.v17)],
     products: [
-        .executable(name: "App", targets: ["App"]),
+        .executable(name: "App", targets: ["App"])
     ],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.6.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
         // Database
         .package(url: "https://github.com/vapor/fluent-postgres-driver.git", from: "2.10.0"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "2.0.0-beta.6")
+        .package(
+            url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "2.0.0"),
     ],
     targets: [
-        .executableTarget(name: "App",
+        .executableTarget(
+            name: "App",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Hummingbird", package: "hummingbird"),
                 // Database
                 .product(name: "FluentPostgresDriver", package: "fluent-postgres-driver"),
-                .product(name: "HummingbirdFluent", package: "hummingbird-fluent")
+                .product(name: "HummingbirdFluent", package: "hummingbird-fluent"),
             ],
             path: "Sources/App"
         ),
-        .testTarget(name: "AppTests",
+        .testTarget(
+            name: "AppTests",
             dependencies: [
                 .byName(name: "App"),
-                .product(name: "HummingbirdTesting", package: "hummingbird")
+                .product(name: "HummingbirdTesting", package: "hummingbird"),
             ],
             path: "Tests/AppTests"
-        )
+        ),
     ]
 )
